@@ -122,7 +122,27 @@ func Dup(buf []byte) []byte {
 	return b
 }
 
+func BoolToByte(buf []bool) []byte {
+	r := make([]byte, len(buf))
+	for i, v := range buf {
+		if v {
+			r[i] = 1
+		}
+	}
+	return r
+}
 
+func ByteToBool(buf []byte) []bool  {
+	r := make([]bool, len(buf))
+	for i, v := range buf {
+		if v > 0 {
+			r[i] = true
+		}
+	}
+	return r
+}
+
+//ShrinkBool
 func BooleansToBytes(buf []bool) []byte {
 	length := len(buf)
 	//length = length % 8 == 0 ? length / 8 : length / 8 + 1;
@@ -143,6 +163,7 @@ func BooleansToBytes(buf []bool) []byte {
 	return b
 }
 
+//ExpandBool
 func BytesToBooleans(buf []byte) []bool {
 	length := len(buf)
 	ln := length << 3 // length * 8
