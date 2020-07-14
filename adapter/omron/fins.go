@@ -1,5 +1,14 @@
 package omron
 
+type Code byte
+
+const (
+	DMArea         Code = 0x02
+	CIOArea             = 0x30
+	WorkArea            = 0x31
+	HoldingBitArea      = 0x32
+	AuxBitArea          = 0x33
+)
 
 type Fins struct {
 	// 信息控制字段，默认0x80

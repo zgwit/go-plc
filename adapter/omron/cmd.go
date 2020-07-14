@@ -1,11 +1,11 @@
 package omron
 
-func buildReadCommand(code byte, addr uint16, bit uint8, length uint16) []byte {
+func buildReadBitCommand(code Code, addr uint16, bit uint8, length uint16) []byte {
 	buf := make([]byte, 8)
 	//命令
 	buf[0] = 0x01 //MRC 读取存储区数据
 	buf[1] = 0x01 //SRC
-	buf[2] = code
+	buf[2] = byte(code) + 0x80
 	helper.WriteUint16(buf[3:], addr)   // 地址
 	buf[5] = bit                        // 位地址
 	helper.WriteUint16(buf[6:], length) // 长度
@@ -13,7 +13,20 @@ func buildReadCommand(code byte, addr uint16, bit uint8, length uint16) []byte {
 	return buf
 }
 
-func buildWriteCommand(code byte, addr uint16, isBit bool, values []byte) []byte {
+func buildReadWordCommand(code Code, addr uint16, length uint16) []byte {
+	buf := make([]byte, 8)
+	//命令
+	buf[0] = 0x01 //MRC 读取存储区数据
+	buf[1] = 0x01 //SRC
+	buf[2] = byte(code)
+	helper.WriteUint16(buf[3:], addr)   // 地址
+	buf[5] = 0                          // 位地址
+	helper.WriteUint16(buf[6:], length) // 长度
+
+	return buf
+}
+
+func buildWriteBitCommand(code byte, addr uint16, bit byte, values []byte) []byte {
 	length := len(values)
 
 	buf := make([]byte, 8+length)
@@ -22,6 +35,20 @@ func buildWriteCommand(code byte, addr uint16, isBit bool, values []byte) []byte
 	buf[2] = code
 	helper.WriteUint16(buf[3:], addr) // 地址
 	buf[5] = bit
+	helper.WriteUint16(buf[6:], uint16(length)) // 长度
+	copy(buf[8:], values)                       //数据
+	return buf
+}
+
+func buildWriteWorldCommand(code byte, addr uint16, isBit bool, values []byte) []byte {
+	length := len(values)
+
+	buf := make([]byte, 8+length)
+	buf[0] = 0x01 //MRC 读取存储区数据
+	buf[1] = 0x02 //SRC
+	buf[2] = code + 0x80
+	helper.WriteUint16(buf[3:], addr) // 地址
+	buf[5] = 0
 	if isBit {
 		length = length / 2 // 一个word是双字节
 	}
