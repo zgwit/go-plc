@@ -1,9 +1,10 @@
 package link
 
-import "io"
-
 //Link 通讯链路
 type Link interface {
-	//继承部分io接口，读、写、关闭
-	io.ReadWriteCloser
+	//关闭
+	Close() error
+
+	//发送请求
+	Request(req []byte) ([]byte, error)
 }

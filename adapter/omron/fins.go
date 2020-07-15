@@ -46,3 +46,30 @@ type Fins struct {
 	// 设备的标识号
 	SID byte // 0x00
 }
+
+func initFins(f *Fins)  {
+	f.ICF = 0x80
+	f.GCT = 0x02
+}
+
+func (f *Fins) packCommand(payload []byte) []byte {
+	length := len(payload)
+	buf := make([]byte, 10+length)
+
+	//UDP头
+	buf[0] = f.ICF
+	buf[1] = f.RSV
+	buf[2] = f.GCT
+	buf[3] = f.DNA
+	buf[4] = f.DA1
+	buf[5] = f.DA2
+	buf[6] = f.SNA
+	buf[7] = f.SA1
+	buf[8] = f.SA2
+	buf[9] = f.SID
+
+	//附加数据
+	copy(buf[10:], payload)
+
+	return buf
+}

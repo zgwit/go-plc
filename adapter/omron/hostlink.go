@@ -29,9 +29,10 @@ type HostLink struct {
 	link link.Link
 }
 
-func NewHostLink() *HostLink {
+func NewHostLink(link link.Link) *HostLink {
 	return &HostLink{
-		ICF: 0x80,
+		ICF:  0x80,
+		link: link,
 	}
 }
 
@@ -61,23 +62,19 @@ func (adapter *HostLink) packCommand(payload []byte) []byte {
 }
 
 func (adapter *HostLink) read(cmd []byte, expect int) ([]byte, error) {
-	if _, e := adapter.link.Write(cmd); e != nil {
-		return nil, e
-	}
-
-	buf := make([]byte, 27+expect)
 
 	//@ [0 0 :单元号] [F A] [0 0] [4 0 :ICF][0 0 :DA2][0 0 :SA2][0 0 :SID]
 	//[命令码 4字节] [状态码 4字节] [ ...data... ]
 	//[FCS][* CR]
 
-	//adapter.SID = FromHex(buf[13:15])[0]
-
-	n, err := adapter.link.Read(buf)
+	buf, err := adapter.link.Request(cmd)
 	if err != nil {
 		return nil, err
 	}
-	v := helper.FromHex(buf[15 : n-4])
+
+	//adapter.SID = FromHex(buf[13:15])[0]
+
+	v := helper.FromHex(buf[15 : len(buf)-4])
 
 	//[命令码 1 1] [结束码 0 0] , data
 	code := helper.ParseUint16(v[2:])
@@ -88,16 +85,12 @@ func (adapter *HostLink) read(cmd []byte, expect int) ([]byte, error) {
 	return v[4:], nil
 }
 func (adapter *HostLink) write(cmd []byte) error {
-	if _, e := adapter.link.Write(cmd); e != nil {
-		return e
-	}
-	buf := make([]byte, 27)
-	n, err := adapter.link.Read(buf)
+	buf, err := adapter.link.Request(cmd)
 	if err != nil {
 		return err
 	}
 
-	v := helper.FromHex(buf[15 : n-4])
+	v := helper.FromHex(buf[15 : len(buf)-4])
 	code := helper.ParseUint16(v[2:])
 	if code != 0 {
 		return errors.New(fmt.Sprintf("错误码: %d", code))
@@ -123,14 +116,14 @@ func (adapter *HostLink) ReadWord(code Code, addr uint16, length uint16) ([]byte
 	return adapter.read(cmd, int(length))
 }
 
-func (adapter *HostLink) WriteBit(code Code, addr uint16, bit uint8, values []bool) error  {
+func (adapter *HostLink) WriteBit(code Code, addr uint16, bit uint8, values []bool) error {
 	v := helper.BoolToByte(values)
 	cmd := buildWriteBitCommand(code, addr, bit, v)
 	cmd = adapter.packCommand(cmd)
 	return adapter.write(cmd)
 }
 
-func (adapter *HostLink) WriteWord(code Code, addr uint16, values []byte) error  {
+func (adapter *HostLink) WriteWord(code Code, addr uint16, values []byte) error {
 	cmd := buildWriteWordCommand(code, addr, values)
 	cmd = adapter.packCommand(cmd)
 	return adapter.write(cmd)

@@ -44,27 +44,39 @@ func (l *SerialLink) Open() error {
 	return nil
 }
 
-func (l *SerialLink) Read(buf []byte) (int, error) {
+func (l *SerialLink) Request(req []byte) ([]byte, error) {
+	//发送
+	n, e := l.port.Write(req)
+	if e != nil {
+		return nil, e
+	}
+	if n < len(req) {
+		//TODO 此处应该继续发送，直到发送完
+		_, _ = l.port.Write(req[n:])
+	}
+
+	buf := make([]byte, 1024)
+	//读取
 	var sum int = 0
 	for {
 		n, e := l.port.Read(buf[sum:])
 		if e != nil {
-			return 0, e
+			return nil, e
 		}
-		sum += n
 		//没有了
 		if n == 0 {
-			return sum, nil
+			//return buf[:sum], nil
+			break
 		}
+
+		sum += n
 		//收满了
 		if sum == len(buf) {
-			return  sum, nil
+			//return  buf, nil
+			break //TODO 此处应该扩张
 		}
 	}
-}
-
-func (l *SerialLink) Write(buf []byte) (int, error) {
-	return l.port.Write(buf)
+	return buf[:sum], nil
 }
 
 func (l *SerialLink) Close() error {
