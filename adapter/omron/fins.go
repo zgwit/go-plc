@@ -47,7 +47,7 @@ type Fins struct {
 	SID byte // 0x00
 }
 
-func (f *Fins) packCommand(payload []byte) []byte {
+func (f *Fins) packUDPCommand(payload []byte) []byte {
 	length := len(payload)
 	buf := make([]byte, 10+length)
 
