@@ -45,6 +45,8 @@ func (l *SerialLink) Open() error {
 }
 
 func (l *SerialLink) Request(req []byte) ([]byte, error) {
+	//fmt.Println("serial send", req)
+
 	//发送
 	n, e := l.port.Write(req)
 	if e != nil {
@@ -76,6 +78,9 @@ func (l *SerialLink) Request(req []byte) ([]byte, error) {
 			break //TODO 此处应该扩张
 		}
 	}
+
+	//fmt.Println("serial recv", buf[:sum])
+
 	return buf[:sum], nil
 }
 

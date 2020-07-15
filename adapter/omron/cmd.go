@@ -21,8 +21,8 @@ func buildReadWordCommand(code Code, addr uint16, length uint16) []byte {
 	buf[0] = 0x01 //MRC 读取存储区数据
 	buf[1] = 0x01 //SRC
 	buf[2] = byte(code)
-	helper.WriteUint16(buf[3:], addr)   // 地址
-	buf[5] = 0                          // 位地址
+	helper.WriteUint16(buf[3:], addr)     // 地址
+	buf[5] = 0                            // 位地址
 	helper.WriteUint16(buf[6:], length) // 长度
 
 	return buf
@@ -51,8 +51,8 @@ func buildWriteWordCommand(code Code, addr uint16, values []byte) []byte {
 	buf[2] = byte(code) + 0x80
 	helper.WriteUint16(buf[3:], addr) // 地址
 	buf[5] = 0
-	helper.WriteUint16(buf[6:], uint16(length / 2)) // 长度 一个word是双字节
-	copy(buf[8:], values)                       //数据
+	helper.WriteUint16(buf[6:], uint16(length/2)) // 长度 一个word是双字节
+	copy(buf[8:], values)                         //数据
 	return buf
 }
 

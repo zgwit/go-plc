@@ -24,16 +24,12 @@ func NewFinsTCP(link link.Link) *FinsTCP {
 }
 
 func (adapter *FinsTCP) read(cmd []byte, expect int) ([]byte, error) {
-	if _, e := adapter.link.Write(cmd); e != nil {
+	buf, e := adapter.link.Request(cmd)
+	if e != nil {
 		return nil, e
 	}
 
-	buf := make([]byte, 14+expect)
-	n, err := adapter.link.Read(buf)
-	if err != nil {
-		return nil, err
-	}
-	if n < 14 {
+	if len(buf) < 14 {
 		//TODO error
 	}
 
@@ -54,12 +50,12 @@ func (adapter *FinsTCP) write(cmd []byte) error {
 }
 
 func (adapter *FinsTCP) request(cmd []byte) ([]byte, error) {
-
+	return nil, nil
 }
 
 func (adapter *FinsTCP) HandShake() error {
-	cmd := packTCPCommand(0, []byte{0,0,0,1})
-
+	packTCPCommand(0, []byte{0,0,0,1})
+	return nil
 }
 
 func (adapter *FinsTCP) ReadBit(code Code, addr uint16, bit uint8, length uint16) ([]bool, error) {

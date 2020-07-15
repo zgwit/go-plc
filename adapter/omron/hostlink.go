@@ -31,7 +31,7 @@ type HostLink struct {
 
 func NewHostLink(link link.Link) *HostLink {
 	return &HostLink{
-		ICF:  0x80,
+		//ICF:  0x80,
 		link: link,
 	}
 }
@@ -71,6 +71,8 @@ func (adapter *HostLink) read(cmd []byte, expect int) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	fmt.Println("hostlink recv", string(buf))
 
 	//adapter.SID = FromHex(buf[13:15])[0]
 

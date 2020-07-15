@@ -24,7 +24,7 @@ func NewFinsUDP(link link.Link) *FinsUDP {
 }
 
 func (adapter *FinsUDP) read(cmd []byte, expect int) ([]byte, error) {
-	buf, err := adapter.link.Request(buf)
+	buf, err := adapter.link.Request(cmd)
 	if err != nil {
 		return nil, err
 	}

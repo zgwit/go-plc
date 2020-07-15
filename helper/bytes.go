@@ -171,7 +171,9 @@ func BytesToBooleans(buf []byte) []bool {
 
 	for i := 0; i < length; i++ {
 		//b[i] = buf[i/8] & (1 << (i % 8))
-		b[i] = buf[i>>3] & (1 << (i & 0x07))
+		if buf[i>>3] & (1 << (i & 0x07)) > 0 {
+			b[i] = true
+		}
 	}
 
 	return b
