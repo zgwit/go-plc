@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"github.com/zgwit/go-plc/adapter/omron"
-	"github.com/zgwit/go-plc/helper"
 	"github.com/zgwit/go-plc/link"
 )
 
@@ -23,10 +22,10 @@ func main()  {
 	a := omron.NewHostLink(l)
 
 	//b, e := a.Read("D100", 4)
-	b, e := a.ReadBit(omron.HR, 0, 0, 8)
-	fmt.Println("ReadBit DM 10", helper.BooleansToBytes(b), e)
+	b, e := a.ReadBit(omron.HR, 100, 0, 8)
+	fmt.Println("ReadBit DM 10", b, e)
 
-	w, e := a.ReadWord(omron.HR, 0, 2)
+	w, e := a.ReadWord(omron.HR, 100, 2)
 	fmt.Println("ReadWord DM 10", w, e)
 
 }

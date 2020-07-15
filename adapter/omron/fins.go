@@ -11,7 +11,7 @@ const (
 	WR = 0x31
 	//Holding Bit Area
 	HR = 0x32
-	//Aux Bit Area
+	//Auxiliary Bit Area
 	AR = 0x33
 )
 
@@ -45,11 +45,6 @@ type Fins struct {
 
 	// 设备的标识号
 	SID byte // 0x00
-}
-
-func initFins(f *Fins)  {
-	f.ICF = 0x80
-	f.GCT = 0x02
 }
 
 func (f *Fins) packCommand(payload []byte) []byte {
