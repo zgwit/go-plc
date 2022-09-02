@@ -16,7 +16,7 @@ type Protocol interface {
 	//Write 写数据
 	Write(station int, area string, addr string, data []byte) error
 
-	//Attach(conn io.ReadWriter) error
+	//Attach(Conn io.ReadWriter) error
 }
 
 type transport interface {

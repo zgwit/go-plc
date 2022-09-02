@@ -9,16 +9,6 @@ import (
 	"strconv"
 )
 
-type response struct {
-	buf []byte
-	err error
-}
-
-type request struct {
-	cmd  []byte
-	resp chan response //out
-}
-
 // RTU Modbus-RTU协议
 type RTU struct {
 	link io.ReadWriter
