@@ -1,7 +1,6 @@
 package protocol
 
 import (
-	"io"
 	"time"
 )
 

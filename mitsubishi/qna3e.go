@@ -3,8 +3,8 @@ package mitsubishi
 import (
 	"errors"
 	"fmt"
-	"iot-master/connect"
-	helper2 "iot-master/helper"
+	helper2 "github.com/zgwit/go-plc/helper"
+	"io"
 	"strconv"
 )
 
@@ -15,7 +15,7 @@ type A3EAdapter struct {
 	PlcNumber     byte //PLC编号
 	IoNumber      byte //IO编号
 
-	link connect.Tunnel
+	link io.ReadWriter
 }
 
 func NewA3EAdapter() *A3EAdapter {
@@ -28,9 +28,6 @@ func NewA3EAdapter() *A3EAdapter {
 }
 
 func (t *A3EAdapter) request(cmd []byte) ([]byte, error) {
-	if e := t.link.Write(cmd); e != nil {
-		return nil, e
-	}
 
 	// 副标题 D 0 0 0 网络号 0 0 PLC号 F F IO编号 0 3 F F 站号 0 0 应答长度 H . . L 结束代码 H . . L
 	//
@@ -74,7 +71,7 @@ func (t *A3EAdapter) BuildCommand(cmd []byte) []byte {
 	return buf
 }
 
-//Read 读取数据
+// Read 读取数据
 func (t *A3EAdapter) Read(address string, length int) ([]byte, error) {
 
 	//解析地址
@@ -99,12 +96,9 @@ func (t *A3EAdapter) Read(address string, length int) ([]byte, error) {
 	copy(buf[16:], fmt.Sprintf("%X4", length)) // 软元件点数
 
 	//构建命令
-	cmd := t.BuildCommand(buf)
+	t.BuildCommand(buf)
 
 	//发送命令
-	if err := t.link.Write(cmd); err != nil {
-		return nil, err
-	}
 
 	//如果不是位，需要纠正长度
 	if !addr.IsBit {
@@ -202,12 +196,9 @@ func (t *A3EAdapter) Write(address string, values []byte) error {
 	copy(buf[20:], value)
 
 	//构建命令
-	cmd := t.BuildCommand(buf)
+	t.BuildCommand(buf)
 
 	//发送命令
-	if err := t.link.Write(cmd); err != nil {
-		return err
-	}
 
 	//接收响应
 	//recv := make([]byte, 15)

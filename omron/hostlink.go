@@ -3,18 +3,18 @@ package omron
 import (
 	"errors"
 	"fmt"
-	"iot-master/connect"
-	helper2 "iot-master/helper"
-	"iot-master/protocols/protocol"
+	helper2 "github.com/zgwit/go-plc/helper"
+	"github.com/zgwit/go-plc/protocol"
+	"io"
 	"time"
 )
 
 type FinsHostLink struct {
 	frame UdpFrame
-	link  connect.Tunnel
+	link  io.ReadWriter
 }
 
-func NewHostLink(link connect.Tunnel, opts protocol.Options) protocol.Protocol {
+func NewHostLink(link io.ReadWriter, opts string) protocol.Protocol {
 	fins := &FinsHostLink{link: link}
 	link.On("data", func(data []byte) {
 		//fins.OnData(data)

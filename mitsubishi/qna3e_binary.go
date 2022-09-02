@@ -3,8 +3,8 @@ package mitsubishi
 import (
 	"errors"
 	"fmt"
-	"iot-master/connect"
-	"iot-master/helper"
+	"github.com/zgwit/go-plc/helper"
+	"io"
 )
 
 // A3EBinaryAdapter 协议
@@ -14,7 +14,7 @@ type A3EBinaryAdapter struct {
 	PlcNumber     byte //PLC编号
 	IoNumber      byte //IO编号
 
-	link connect.Tunnel
+	link io.ReadWriter
 }
 
 func NewA3EBinaryAdapter() *A3EBinaryAdapter {
@@ -27,9 +27,6 @@ func NewA3EBinaryAdapter() *A3EBinaryAdapter {
 }
 
 func (t *A3EBinaryAdapter) request(cmd []byte) ([]byte, error) {
-	if e := t.link.Write(cmd); e != nil {
-		return nil, e
-	}
 
 	// 副标题 D0 00 网络号 00 PLC号 FF IO编号 FF 03 站号 00 应答长度 L H 结束代码 L H
 	//
@@ -71,7 +68,7 @@ func (t *A3EBinaryAdapter) BuildCommand(cmd []byte) []byte {
 	return buf
 }
 
-//Read 读取数据
+// Read 读取数据
 func (t *A3EBinaryAdapter) Read(address string, length int) ([]byte, error) {
 
 	//解析地址

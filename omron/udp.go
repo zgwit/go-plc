@@ -3,9 +3,9 @@ package omron
 import (
 	"errors"
 	"fmt"
-	"iot-master/connect"
-	"iot-master/helper"
-	"iot-master/protocols/protocol"
+	"github.com/zgwit/go-plc/helper"
+	"github.com/zgwit/go-plc/protocol"
+	"io"
 	"time"
 )
 
@@ -43,17 +43,11 @@ type UdpFrame struct {
 
 type FinsUdp struct {
 	frame UdpFrame
-	link  connect.Tunnel
+	link  io.ReadWriter
 }
 
-func NewFinsUDP(link connect.Tunnel, opts protocol.Options) protocol.Protocol {
+func NewFinsUDP(link io.ReadWriter, opts string) protocol.Protocol {
 	fins := &FinsUdp{link: link}
-	link.On("data", func(data []byte) {
-		//fins.OnData(data)
-	})
-	link.On("close", func() {
-		//close(fins.queue)
-	})
 	return fins
 }
 

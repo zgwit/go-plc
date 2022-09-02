@@ -1,16 +1,15 @@
 package siemens
 
 import (
-	"iot-master/connect"
-	"iot-master/helper"
-	"iot-master/protocols/protocol"
+	"github.com/zgwit/go-plc/helper"
+	"github.com/zgwit/go-plc/protocol"
 )
 
 type Simatic struct {
 	handshake1 []byte
 	handshake2 []byte
 
-	link connect.Tunnel
+	link io.ReadWriter
 	desc *protocol.Desc
 }
 

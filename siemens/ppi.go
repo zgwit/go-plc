@@ -1,10 +1,8 @@
 package siemens
 
-import "iot-master/connect"
-
 //PPI 协议
 type PPI struct {
-	link connect.Tunnel
+	link io.ReadWriter
 }
 
 //Read 读到数据

@@ -2,8 +2,8 @@ package mitsubishi
 
 import (
 	"fmt"
-	"iot-master/connect"
-	"iot-master/helper"
+	"github.com/zgwit/go-plc/helper"
+	"io"
 	"strconv"
 )
 
@@ -14,7 +14,7 @@ type A3C1 struct {
 	PlcNumber     byte //PLC编号
 	UpperNumber   byte //上位机编号
 
-	link connect.Tunnel
+	link io.ReadWriter
 }
 
 func NewA3C1() *A3C1 {
@@ -79,12 +79,9 @@ func (t *A3C1) Read(address string, length int) ([]byte, error) {
 	copy(buf[16:], fmt.Sprintf("%X4", length)) // 软元件点数
 
 	//构建命令
-	cmd := t.BuildCommand(buf)
+	t.BuildCommand(buf)
 
 	//发送命令
-	if err := t.link.Write(cmd); err != nil {
-		return nil, err
-	}
 
 	//如果不是位，需要纠正长度
 	if !addr.IsBit {
@@ -189,12 +186,9 @@ func (t *A3C1) Write(address string, values []byte) error {
 	copy(buf[20:], value)
 
 	//构建命令
-	cmd := t.BuildCommand(buf)
+	t.BuildCommand(buf)
 
 	//发送命令
-	if err := t.link.Write(cmd); err != nil {
-		return err
-	}
 
 	//接收响应
 	//recv := make([]byte, 15)

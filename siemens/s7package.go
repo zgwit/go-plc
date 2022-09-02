@@ -2,7 +2,7 @@ package siemens
 
 import (
 	"fmt"
-	"iot-master/helper"
+	"github.com/zgwit/go-plc/helper"
 )
 
 const (

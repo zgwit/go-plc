@@ -2,8 +2,8 @@ package siemens
 
 import (
 	"fmt"
+	"github.com/zgwit/go-plc/protocol"
 	"iot-master/model"
-	"iot-master/protocols/protocol"
 	"regexp"
 	"strconv"
 	"strings"

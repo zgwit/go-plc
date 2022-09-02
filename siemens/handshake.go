@@ -2,7 +2,7 @@ package siemens
 
 import (
 	"bytes"
-	"iot-master/helper"
+	"github.com/zgwit/go-plc/helper"
 )
 
 const handshake1_200_smart = "03 00 00 16 11 E0 00 00 00 01 00 C1 02 10 00 C2 02 03 00 C0 01 0A"

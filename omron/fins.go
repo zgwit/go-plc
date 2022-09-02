@@ -3,41 +3,30 @@ package omron
 import (
 	"errors"
 	"fmt"
-	"iot-master/connect"
-	"iot-master/helper"
-	"iot-master/protocols/protocol"
-	"time"
+	"github.com/zgwit/go-plc/helper"
+	"github.com/zgwit/go-plc/protocol"
+	"io"
 )
 
 type Fins struct {
 	frame UdpFrame
-	link  connect.Tunnel
+	link  protocol.Messenger
 }
 
-func NewFinsTCP(link connect.Tunnel, opts protocol.Options) protocol.Protocol {
-	fins := &Fins{link: link}
-	link.On("data", func(data []byte) {
-		//fins.OnData(data)
-	})
-	link.On("close", func() {
-		//close(fins.queue)
-	})
+func NewFinsTCP(link io.ReadWriter, opts string) protocol.Protocol {
+	fins := &Fins{link: protocol.Messenger{Conn: link}}
 	return fins
-}
-
-func (f *Fins) Desc() *protocol.Desc {
-	return &DescTCP
 }
 
 func (f *Fins) execute(cmd []byte) ([]byte, error) {
 	//发送请求
-	buf, err := f.link.Ask(cmd, time.Second*5)
+	var buf [256]byte
+	l, err := f.link.Ask(cmd, buf[:])
 	if err != nil {
 		return nil, err
 	}
 
 	//解析数据
-	l := len(buf)
 	if l < 16 {
 		return nil, errors.New("长度不够")
 	}
@@ -50,11 +39,11 @@ func (f *Fins) execute(cmd []byte) ([]byte, error) {
 
 	length := helper.ParseUint32(buf[4:])
 	//判断剩余长度
-	if int(length)+8 < len(buf) {
+	if int(length)+8 < l {
 		return nil, fmt.Errorf("长度错误: %d", length)
 	}
 
-	return buf[16:], nil
+	return buf[16:l], nil
 }
 
 func (f *Fins) Handshake() error {
@@ -81,7 +70,7 @@ func (f *Fins) Handshake() error {
 	return nil
 }
 
-func (f *Fins) Read(station int, address protocol.Addr, size int) ([]byte, error) {
+func (f *Fins) Read(station int, area string, addr string, size int) ([]byte, error) {
 
 	//构建读命令
 	buf, e := buildReadCommand(address, size)
@@ -111,11 +100,7 @@ func (f *Fins) Read(station int, address protocol.Addr, size int) ([]byte, error
 	return recv[14:], nil
 }
 
-func (f *Fins) Poll(station int, addr protocol.Addr, size int) ([]byte, error) {
-	return f.Read(station, addr, size)
-}
-
-func (f *Fins) Write(station int, address protocol.Addr, values []byte) error {
+func (f *Fins) Write(station int, area string, addr string, values []byte) error {
 	//构建写命令
 	buf, e := buildWriteCommand(address, values)
 	if e != nil {

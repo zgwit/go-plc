@@ -2,8 +2,6 @@ package mitsubishi
 
 import (
 	"errors"
-	"iot-master/model"
-	"iot-master/protocols/protocol"
 	"strconv"
 	"strings"
 )
@@ -32,27 +30,6 @@ type FxProgramAddress struct {
 	Code string
 	Str  string
 	Addr uint16
-}
-
-func (a *FxProgramAddress) String() string {
-	return a.Str
-}
-
-func (a *FxProgramAddress) Lookup(data []byte, from protocol.Addr, tp model.DataType, le bool, precision int) (interface{}, bool) {
-	base := from.(*FxProgramAddress)
-	if base.Code != a.Code {
-		return nil, false
-	}
-	cursor := int(a.Addr - base.Addr)
-	if cursor < 0 || cursor > len(data) {
-		return nil, false
-	}
-
-	val, err := tp.Decode(data[cursor:], le, precision)
-	if err != nil {
-		return nil, false
-	}
-	return val, true
 }
 
 var commands = map[string]Command{
@@ -141,7 +118,7 @@ func ParseA1EAddress(address string) (addr Address, err error) {
 	return
 }
 
-func ParseFxProgramAddress(code string, address string) (protocol.Addr, error) {
+func ParseFxProgramAddress(code string, address string) (*FxProgramAddress, error) {
 
 	var addr FxProgramAddress
 	addr.Str = address
@@ -172,5 +149,5 @@ func ParseFxProgramAddress(code string, address string) (protocol.Addr, error) {
 	}
 
 	err := errors.New("未知消息")
-	return nil, err
+	return &addr, err
 }

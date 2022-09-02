@@ -1,7 +1,5 @@
 package protocol
 
-import "io"
-
 type Messenger struct {
 	Conn io.ReadWriter
 }

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/zgwit/go-plc/helper"
 	"github.com/zgwit/go-plc/protocol"
-	"io"
+
 	"strconv"
 	"sync"
 	"time"

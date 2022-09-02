@@ -4,40 +4,38 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"iot-master/connect"
-	"iot-master/helper"
-	"iot-master/protocols/protocol"
+	"github.com/zgwit/go-plc/helper"
+	"github.com/zgwit/go-plc/protocol"
 	"strings"
-	"time"
 )
 
-//FxProgram FX协议
+// FxProgram FX协议
 type FxProgram struct {
-	link connect.Tunnel
+	link protocol.Messenger
 }
 
-func (t *FxProgram) Desc() *protocol.Desc {
-	return &Fx_Program
+func (t *FxProgram) Write(station int, area string, addr string, data []byte) error {
+	a, err := ParseFxProgramAddress(area, addr)
+	if err != nil {
+		return err
+	}
+	return t.write(a, data)
 }
 
-func (t *FxProgram) Write(station int, addr protocol.Addr, data []byte) error {
-	return t.write(addr.(*FxProgramAddress), data)
+func (t *FxProgram) Read(station int, area string, addr string, size int) ([]byte, error) {
+	a, err := ParseFxProgramAddress(area, addr)
+	if err != nil {
+		return nil, err
+	}
+	return t.read(a, size)
 }
 
-func (t *FxProgram) Read(station int, addr protocol.Addr, size int) ([]byte, error) {
-	return t.read(addr.(*FxProgramAddress), size)
-}
-
-func (t *FxProgram) Poll(station int, addr protocol.Addr, size int) ([]byte, error) {
-	return t.read(addr.(*FxProgramAddress), size)
-}
-
-//NewFxSerial 新建
+// NewFxSerial 新建
 func NewFxSerial() *FxProgram {
 	return &FxProgram{}
 }
 
-//Read 解析
+// Read 解析
 func (t *FxProgram) read(addr *FxProgramAddress, length int) ([]byte, error) {
 	buf := make([]byte, 11)
 	buf[0] = 0x02                                // STX
@@ -56,8 +54,9 @@ func (t *FxProgram) read(addr *FxProgramAddress, length int) ([]byte, error) {
 	helper.WriteUint8Hex(buf[len(buf)-2:], sum)
 
 	fmt.Println("FxProgram read buff = ", hex.EncodeToString(buf))
-	recv, err := t.link.Ask(buf, 5*time.Second)
-	fmt.Println("FxProgram recv buff", hex.EncodeToString(recv))
+	var recv [256]byte
+	n, err := t.link.Ask(buf, recv[:])
+	fmt.Println("FxProgram recv buff", hex.EncodeToString(recv[:n]))
 	if err != nil {
 		return nil, err
 	}
@@ -66,7 +65,7 @@ func (t *FxProgram) read(addr *FxProgramAddress, length int) ([]byte, error) {
 		return nil, errors.New("返回错误")
 	}
 
-	ret, err := hex.DecodeString(string(recv[1 : len(recv)-3]))
+	ret, err := hex.DecodeString(string(recv[1 : n-3]))
 
 	if err != nil {
 		return nil, err
@@ -76,7 +75,7 @@ func (t *FxProgram) read(addr *FxProgramAddress, length int) ([]byte, error) {
 	return ret, nil
 }
 
-//Write 写
+// Write 写
 func (t *FxProgram) write(addr *FxProgramAddress, values []byte) error {
 
 	//先转成十六进制
@@ -101,8 +100,9 @@ func (t *FxProgram) write(addr *FxProgramAddress, values []byte) error {
 	helper.WriteUint8Hex(buf[len(buf)-2:], sum)
 
 	fmt.Println("FxProgram write buff = ", hex.EncodeToString(buf))
-	recv, err := t.link.Ask(buf, 5*time.Second)
-	fmt.Println("FxProgram recv buff", hex.EncodeToString(recv))
+	var recv [256]byte
+	n, err := t.link.Ask(buf, recv[:])
+	fmt.Println("FxProgram recv buff", hex.EncodeToString(recv[:n]))
 	if err != nil {
 		return err
 	}

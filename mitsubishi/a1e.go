@@ -1,11 +1,11 @@
 package mitsubishi
 
-import "iot-master/connect"
+import "io"
 
 // A1eAdapter A1E协议
 type A1eAdapter struct {
 	PlcNumber byte
-	link      connect.Tunnel
+	link      io.ReadWriter
 }
 
 func NewA1eAdapter() *A1eAdapter {
@@ -14,7 +14,7 @@ func NewA1eAdapter() *A1eAdapter {
 	return &a
 }
 
-//Read 读取数据
+// Read 读取数据
 func (t *A1eAdapter) Read(address string, length int) ([]byte, error) {
 
 	//解析地址
@@ -45,9 +45,6 @@ func (t *A1eAdapter) Read(address string, length int) ([]byte, error) {
 	buf[11] = 0x00
 
 	//发送命令
-	if err := t.link.Write(buf); err != nil {
-		return nil, err
-	}
 
 	//接收响应
 	recv := make([]byte, 2+length)
@@ -59,7 +56,7 @@ func (t *A1eAdapter) Read(address string, length int) ([]byte, error) {
 	return recv[2:], nil
 }
 
-//Write 写入数据
+// Write 写入数据
 func (t *A1eAdapter) Write(address string, values []byte) error {
 
 	length := len(values)
@@ -95,9 +92,6 @@ func (t *A1eAdapter) Write(address string, values []byte) error {
 	copy(buf[12:], values)
 
 	//发送命令
-	if err := t.link.Write(buf); err != nil {
-		return err
-	}
 
 	//接收响应
 	//recv := make([]byte, 2)

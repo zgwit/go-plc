@@ -3,8 +3,7 @@ package mitsubishi
 import (
 	"errors"
 	"fmt"
-	"iot-master/connect"
-	helper2 "iot-master/helper"
+	helper2 "github.com/zgwit/go-plc/helper"
 	"strconv"
 	"strings"
 )
@@ -69,7 +68,7 @@ type FxSpecial struct {
 	CheckSum bool //默认true
 	Delay    uint8
 
-	link connect.Tunnel
+	link io.ReadWriter
 }
 
 func NewFxSpecial() *FxSpecial {
