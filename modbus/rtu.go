@@ -3,10 +3,10 @@ package modbus
 import (
 	"errors"
 	"fmt"
-	"iot-master/connect"
-	"iot-master/helper"
-	"iot-master/protocols/protocol"
-	"time"
+	"github.com/zgwit/go-plc/helper"
+	"github.com/zgwit/go-plc/protocol"
+	"io"
+	"strconv"
 )
 
 type response struct {
@@ -19,62 +19,54 @@ type request struct {
 	resp chan response //out
 }
 
-//RTU Modbus-RTU协议
+// RTU Modbus-RTU协议
 type RTU struct {
-	link connect.Tunnel
+	link io.ReadWriter
+	buf  []byte
 }
 
-func NewRTU(link connect.Tunnel, opts protocol.Options) protocol.Protocol {
+func NewRTU(link io.ReadWriter, opts string) protocol.Protocol {
+	//TODO parse opts(yaml)
 	rtu := &RTU{
 		link: link,
 		//slave: opts["slave"].(uint8),
+		buf: make([]byte, 256),
 	}
-	link.On("data", func(data []byte) {
-		//rtu.OnData(data)
-	})
-	link.On("close", func() {
-		//close(rtu.queue)
-	})
 
 	return rtu
 }
 
-func (m *RTU) Desc() *protocol.Desc {
-	return &DescRTU
-}
-
 func (m *RTU) execute(cmd []byte) ([]byte, error) {
 
-	buf, err := m.link.Ask(cmd, 5*time.Second)
+	_, err := m.link.Write(cmd)
 	if err != nil {
 		return nil, err
 	}
 
-	//解析数据
-	l := len(buf)
-	if l < 6 {
+	l, err := m.link.Read(m.buf)
+	if l < 5 {
 		return nil, errors.New("长度不足")
 	}
 
-	crc := helper.ParseUint16LittleEndian(buf[l-2:])
+	crc := helper.ParseUint16LittleEndian(m.buf[l-2:])
 
-	if crc != CRC16(buf[:l-2]) {
+	if crc != CRC16(m.buf[:l-2]) {
 		//检验错误
 		return nil, errors.New("校验错误")
 	}
 
 	//slave := buf[0]
-	fc := buf[1]
+	fc := m.buf[1]
 
 	//解析错误码
 	if fc&0x80 > 0 {
-		return nil, fmt.Errorf("错误码：%d", buf[2])
+		return nil, fmt.Errorf("错误码：%d", m.buf[2])
 	}
 
 	//解析数据
 	length := 4
-	count := int(buf[2])
-	switch buf[1] {
+	count := int(m.buf[2])
+	switch fc {
 	case FuncCodeReadDiscreteInputs,
 		FuncCodeReadCoils:
 		length += 1 + count/8
@@ -86,7 +78,7 @@ func (m *RTU) execute(cmd []byte) ([]byte, error) {
 			//长度不够
 			return nil, errors.New("长度不足")
 		}
-		b := buf[3 : l-2]
+		b := m.buf[3 : l-2]
 		//数组解压
 		bb := helper.ExpandBool(b, count)
 		return bb, nil
@@ -98,7 +90,7 @@ func (m *RTU) execute(cmd []byte) ([]byte, error) {
 			//长度不够
 			return nil, errors.New("长度不足")
 		}
-		b := buf[3 : l-2]
+		b := m.buf[3 : l-2]
 		return helper.Dup(b), nil
 	case FuncCodeWriteSingleCoil, FuncCodeWriteMultipleCoils,
 		FuncCodeWriteSingleRegister, FuncCodeWriteMultipleRegisters:
@@ -109,27 +101,31 @@ func (m *RTU) execute(cmd []byte) ([]byte, error) {
 	}
 }
 
-func (m *RTU) Read(station int, address protocol.Addr, size int) ([]byte, error) {
-	addr := address.(*Address)
+func (m *RTU) Read(station int, area string, addr string, size int) ([]byte, error) {
+	code := parseCode(area)
+	offset, err := strconv.ParseUint(addr, 10, 16)
+	if err != nil {
+		return nil, err
+	}
+
 	b := make([]byte, 8)
 	b[0] = uint8(station)
-	b[1] = addr.Code
-	helper.WriteUint16(b[2:], addr.Offset)
+	b[1] = code
+	helper.WriteUint16(b[2:], uint16(offset))
 	helper.WriteUint16(b[4:], uint16(size))
 	helper.WriteUint16LittleEndian(b[6:], CRC16(b[:6]))
 
 	return m.execute(b)
 }
 
-func (m *RTU) Poll(station int, addr protocol.Addr, size int) ([]byte, error) {
-	return m.Read(station, addr, size)
-}
+func (m *RTU) Write(station int, area string, addr string, buf []byte) error {
+	code := parseCode(area)
+	offset, err := strconv.ParseUint(addr, 10, 16)
+	if err != nil {
+		return err
+	}
 
-func (m *RTU) Write(station int, address protocol.Addr, buf []byte) error {
-	addr := address.(*Address)
 	length := len(buf)
-	//如果是线圈，需要Shrink
-	code := addr.Code
 	switch code {
 	case FuncCodeReadCoils:
 		if length == 1 {
@@ -169,10 +165,10 @@ func (m *RTU) Write(station int, address protocol.Addr, buf []byte) error {
 	b := make([]byte, l)
 	b[0] = uint8(station)
 	b[1] = code
-	helper.WriteUint16(b[2:], addr.Offset)
+	helper.WriteUint16(b[2:], uint16(offset))
 	copy(b[4:], buf)
 	helper.WriteUint16LittleEndian(b[l-2:], CRC16(b[:l-2]))
 
-	_, err := m.execute(b)
+	_, err = m.execute(b)
 	return err
 }

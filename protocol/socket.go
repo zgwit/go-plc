@@ -1,4 +1,4 @@
-package go_plc
+package protocol
 
 import (
 	"net"

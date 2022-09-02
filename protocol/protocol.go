@@ -1,4 +1,4 @@
-package go_plc
+package protocol
 
 import (
 	"io"
@@ -11,10 +11,10 @@ type NewFunc func(conn io.ReadWriter, opts string) Protocol
 type Protocol interface {
 
 	//Read 读数据
-	Read(station int, area string, addr int, size int, immediate bool) ([]byte, error)
+	Read(station int, area string, addr string, size int) ([]byte, error)
 
 	//Write 写数据
-	Write(station int, area string, addr int, data []byte) error
+	Write(station int, area string, addr string, data []byte) error
 
 	//Attach(conn io.ReadWriter) error
 }
