@@ -1,6 +1,6 @@
 package protocol
 
-type AddrResolver func(area string, addr string) (Addr, error)
+type AddressResolver func(area string, addr string) (Addr, error)
 
 type Addr interface {
 	String() string

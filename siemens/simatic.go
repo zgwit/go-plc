@@ -122,7 +122,7 @@ func packCommand(cmd []byte) []byte {
 
 	//仅出现在Ack-Data消息中
 	//buf[17] Error class 0x00无 0x81应用程序关系错误 0x82对象定义错误 0x83无效资源可用错误 0x84服务处理错误 0x85请求错误 0x87访问错误
-	//buf[18] Error Code
+	//buf[18] Error Area
 
 	//Parameter区
 	//读取或写入
@@ -132,18 +132,18 @@ func packCommand(cmd []byte) []byte {
 	//buf[22]数据类型 1 2
 	//buf[23 24]读取长度
 	//buf[25 26]DB号
-	//buf[27]Code
+	//buf[27]Area
 	//buf[28 29 30]地址
 
 	//Data数据区
 	//读取的结果
-	//buf[19] Return Code 0xff 代表成功
+	//buf[19] Return Area 0xff 代表成功
 	//buf[20] Variable type 数据类型
 	//buf[21 22] Count
 	//buf[23+]数据，长度是len(variable)*count
 
 	//写入的内容 和 结果
-	//buf[31] Return Code 0x00 固定
+	//buf[31] Return Area 0x00 固定
 	//buf[32] Variable type 数据类型
 	//buf[33 34] Count
 	//buf[35+]数据，长度是len(variable)*count

@@ -1,11 +1,16 @@
 
-<h1 align="center">GO-PLC</h1>
+<h1 align="center">GO PLC</h1>
 
 
 Native Go implementation of PLC protocols for iot-master and others.
 
 [github.com/zgwit/iot-master](https://github.com/zgwit/iot-master)
 
+## Attention
+
+This repo is not available for real project!!!
+
+Join us pls if you want. 
 
 ## Quickstart
 
@@ -47,7 +52,7 @@ but try to create an issue first.
 
 ## How to join
 
-Just fork & pull request!
+Just Fork & PR!
 
 ## License
 

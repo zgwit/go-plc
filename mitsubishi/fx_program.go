@@ -44,7 +44,7 @@ var fxProgramCommands = map[string]FxProgramCommand{
 	"CN": {0x0A00, false, 10}, //计数器的当前值 ?
 }
 
-func ParseFxProgramAddress(code string, address string) (*FxProgramAddress, error) {
+func ParseFxProgramAddress(code string, address string) (protocol.Addr, error) {
 	var addr FxProgramAddress
 
 	cmd, ok := fxProgramCommands[code]
