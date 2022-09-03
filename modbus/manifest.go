@@ -9,7 +9,7 @@ var Areas = []protocol.Area{
 	{"I", "04 输入寄存器"},
 }
 
-var DescRTU = protocol.Manifest{
+var ManifestRTU = protocol.Manifest{
 	Name:     "ModbusRTU",
 	Version:  "1.0",
 	Label:    "Modbus RTU",
@@ -18,7 +18,7 @@ var DescRTU = protocol.Manifest{
 	Factory:  NewRTU,
 }
 
-var DescTCP = protocol.Manifest{
+var ManifestTCP = protocol.Manifest{
 	Name:     "ModbusTCP",
 	Version:  "1.1",
 	Label:    "Modbus TCP",

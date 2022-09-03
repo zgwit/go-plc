@@ -17,7 +17,7 @@ var Codes = []protocol.Area{
 	{"T", "定时器"},
 }
 
-var DescS7_200 = protocol.Manifest{
+var ManifestS7_200 = protocol.Manifest{
 	Name:     "S7-S7-200",
 	Version:  "1.0",
 	Label:    "S7 S7-200",
@@ -32,7 +32,7 @@ var DescS7_200 = protocol.Manifest{
 	},
 }
 
-var DescS7_200_Smart = protocol.Manifest{
+var ManifestS7_200_Smart = protocol.Manifest{
 	Name:     "S7-S7-200-Smart",
 	Version:  "1.0",
 	Label:    "S7 S7-200 Smart",
@@ -48,7 +48,7 @@ var DescS7_200_Smart = protocol.Manifest{
 	},
 }
 
-var DescS7_300 = protocol.Manifest{
+var ManifestS7_300 = protocol.Manifest{
 	Name:     "S7-S7-300",
 	Version:  "1.0",
 	Label:    "S7 S7-300",
@@ -63,7 +63,7 @@ var DescS7_300 = protocol.Manifest{
 	},
 }
 
-var DescS7_400 = protocol.Manifest{
+var ManifestS7_400 = protocol.Manifest{
 	Name:     "S7-S7-400",
 	Version:  "1.0",
 	Label:    "S7 S7-400",
@@ -80,7 +80,7 @@ var DescS7_400 = protocol.Manifest{
 	},
 }
 
-var DescS7_1200 = protocol.Manifest{
+var ManifestS7_1200 = protocol.Manifest{
 	Name:     "S7-S7-1200",
 	Version:  "1.0",
 	Label:    "S7 S7-1200",
@@ -95,7 +95,7 @@ var DescS7_1200 = protocol.Manifest{
 	},
 }
 
-var DescS7_1500 = protocol.Manifest{
+var ManifestS7_1500 = protocol.Manifest{
 	Name:     "S7-S7-1500",
 	Version:  "1.0",
 	Label:    "S7 S7-1500",

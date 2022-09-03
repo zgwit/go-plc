@@ -5,7 +5,7 @@ import (
 	"io"
 )
 
-var Fx_Program = protocol.Manifest{
+var ManifestFxProgram = protocol.Manifest{
 	Name:     "Fx-Program",
 	Version:  "1.0",
 	Label:    "Fx-Program",
