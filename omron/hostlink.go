@@ -6,34 +6,29 @@ import (
 	helper2 "github.com/zgwit/go-plc/helper"
 	"github.com/zgwit/go-plc/protocol"
 	"io"
-	"time"
 )
 
 type FinsHostLink struct {
 	frame UdpFrame
-	link  io.ReadWriter
+	link  protocol.Messenger
+	buf   []byte
 }
 
 func NewHostLink(link io.ReadWriter, opts string) protocol.Protocol {
-	fins := &FinsHostLink{link: link}
-	link.On("data", func(data []byte) {
-		//fins.OnData(data)
-	})
-	link.On("close", func() {
-		//close(fins.queue)
-	})
+	fins := &Fins{
+		link: protocol.Messenger{Conn: link},
+		buf:  make([]byte, 256)}
 	return fins
 }
 
 func (f *FinsHostLink) execute(cmd []byte) ([]byte, error) {
 	//发送请求
-	buf, err := f.link.Ask(cmd, time.Second*5)
+	l, err := f.link.Ask(cmd, f.buf)
 	if err != nil {
 		return nil, err
 	}
 
 	//解析数据
-	l := len(buf)
 	if l < 23 {
 		return nil, errors.New("长度不够")
 	}
@@ -41,7 +36,7 @@ func (f *FinsHostLink) execute(cmd []byte) ([]byte, error) {
 	//@ [单元号] [F A] [0 0] [4 0 ICF][0 0 DA2][0 0 SA2][ SID ]
 	//[命令码 4字节] [状态码 4字节] [ ...data... ]
 	//[FCS][* CR]
-	recv := helper2.FromHex(buf[15 : l-4])
+	recv := helper2.FromHex(f.buf[15 : l-4])
 
 	//记录响应的SID
 	//t.frame.SID = FromHex(payload[13:15])[0]
@@ -49,11 +44,7 @@ func (f *FinsHostLink) execute(cmd []byte) ([]byte, error) {
 	return recv, nil
 }
 
-func (f *FinsHostLink) Desc() *protocol.Desc {
-	return &DescHostlink
-}
-
-func (f *FinsHostLink) Read(station int, address protocol.Addr, size int) ([]byte, error) {
+func (f *FinsHostLink) Read(address protocol.Addr, size int) ([]byte, error) {
 
 	//构建读命令
 	buf, e := buildReadCommand(address, size)
@@ -79,11 +70,7 @@ func (f *FinsHostLink) Read(station int, address protocol.Addr, size int) ([]byt
 	return recv[4:], nil
 }
 
-func (f *FinsHostLink) Poll(station int, addr protocol.Addr, size int) ([]byte, error) {
-	return f.Read(station, addr, size)
-}
-
-func (f *FinsHostLink) Write(station int, address protocol.Addr, values []byte) error {
+func (f *FinsHostLink) Write(address protocol.Addr, values []byte) error {
 	//构建写命令
 	buf, e := buildWriteCommand(address, values)
 	if e != nil {

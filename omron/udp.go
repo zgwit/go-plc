@@ -6,7 +6,6 @@ import (
 	"github.com/zgwit/go-plc/helper"
 	"github.com/zgwit/go-plc/protocol"
 	"io"
-	"time"
 )
 
 type UdpFrame struct {
@@ -43,23 +42,25 @@ type UdpFrame struct {
 
 type FinsUdp struct {
 	frame UdpFrame
-	link  io.ReadWriter
+	link  protocol.Messenger
+	buf   []byte
 }
 
 func NewFinsUDP(link io.ReadWriter, opts string) protocol.Protocol {
-	fins := &FinsUdp{link: link}
+	fins := &FinsUdp{
+		link: protocol.Messenger{Conn: link},
+		buf:  make([]byte, 256)}
 	return fins
 }
 
 func (f *FinsUdp) execute(cmd []byte) ([]byte, error) {
-	//下发指令
-	buf, err := f.link.Ask(cmd, time.Second*5)
+	//发送请求
+	l, err := f.link.Ask(cmd, f.buf)
 	if err != nil {
 		return nil, err
 	}
 
 	//解析数据
-	l := len(buf)
 	if l < 10 {
 		return nil, errors.New("长度不够")
 	}
@@ -67,16 +68,12 @@ func (f *FinsUdp) execute(cmd []byte) ([]byte, error) {
 	//[UDP 10字节]
 
 	//记录响应的SID
-	f.frame.SID = buf[9]
+	f.frame.SID = f.buf[9]
 
-	return buf[10:], nil
+	return f.buf[10:l], nil
 }
 
-func (f *FinsUdp) Desc() *protocol.Desc {
-	return &DescUDP
-}
-
-func (f *FinsUdp) Read(station int, address protocol.Addr, size int) ([]byte, error) {
+func (f *FinsUdp) Read(address protocol.Addr, size int) ([]byte, error) {
 
 	//构建读命令
 	buf, e := buildReadCommand(address, size)
@@ -102,11 +99,7 @@ func (f *FinsUdp) Read(station int, address protocol.Addr, size int) ([]byte, er
 	return recv[4:], nil
 }
 
-func (f *FinsUdp) Poll(station int, addr protocol.Addr, size int) ([]byte, error) {
-	return f.Read(station, addr, size)
-}
-
-func (f *FinsUdp) Write(station int, address protocol.Addr, values []byte) error {
+func (f *FinsUdp) Write(address protocol.Addr, values []byte) error {
 	//构建写命令
 	buf, e := buildWriteCommand(address, values)
 	if e != nil {

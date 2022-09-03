@@ -9,28 +9,17 @@ type Simatic struct {
 	handshake1 []byte
 	handshake2 []byte
 
-	link io.ReadWriter
-	desc *protocol.Desc
-}
-
-func (s *Simatic) Init() {
-	s.link.On("online", func() {
-		_ = s.HandShake()
-	})
-	return
-}
-
-func (s *Simatic) Desc() *protocol.Desc {
-	return &DescS7_200_Smart
+	link protocol.Messenger
+	buf  []byte
 }
 
 func (s *Simatic) HandShake() error {
-	_, err := s.link.Ask(s.handshake1, 5)
+	_, err := s.link.Ask(s.handshake1, s.buf)
 	if err != nil {
 		return err
 	}
 	//TODO 检查结果
-	_, err = s.link.Ask(s.handshake2, 5)
+	_, err = s.link.Ask(s.handshake2, s.buf)
 	if err != nil {
 		return err
 	}
@@ -55,14 +44,14 @@ func (s *Simatic) Read(station int, addr protocol.Addr, size int) ([]byte, error
 
 	cmd := packCommand(buf)
 
-	resp, err := s.link.Ask(cmd, 5)
+	n, err := s.link.Ask(cmd, s.buf)
 	if err != nil {
 		return nil, err
 	}
 
 	//TODO 解析数据
 
-	return resp, nil
+	return s.buf[:n], nil
 }
 
 func (s *Simatic) Poll(station int, addr protocol.Addr, size int) ([]byte, error) {
@@ -94,7 +83,7 @@ func (s *Simatic) Write(station int, addr protocol.Addr, data []byte) error {
 
 	cmd := packCommand(buf)
 
-	_, err := s.link.Ask(cmd, 5)
+	_, err := s.link.Ask(cmd, s.buf)
 	if err != nil {
 		return err
 	}
@@ -104,7 +93,7 @@ func (s *Simatic) Write(station int, addr protocol.Addr, data []byte) error {
 	return nil
 }
 
-//packCommand 打包命令
+// packCommand 打包命令
 func packCommand(cmd []byte) []byte {
 	length := len(cmd)
 

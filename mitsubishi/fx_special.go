@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	helper2 "github.com/zgwit/go-plc/helper"
+	"io"
 	"strconv"
 	"strings"
 )
@@ -107,9 +108,6 @@ func (t *FxSpecial) Read(address string, length int) ([]byte, error) {
 	}
 
 	//发送请求
-	if e := t.link.Write(buf); e != nil {
-		return nil, e
-	}
 
 	recv := make([]byte, recvLength+8)
 	//_, err = t.link.Read(recv)
@@ -170,9 +168,6 @@ func (t *FxSpecial) Write(address string, values []byte) error {
 	}
 
 	//发送请求
-	if e := t.link.Write(buf); e != nil {
-		return e
-	}
 
 	//recv := make([]byte, 5)
 	//_, err = t.link.Read(recv)

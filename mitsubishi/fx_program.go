@@ -6,37 +6,75 @@ import (
 	"fmt"
 	"github.com/zgwit/go-plc/helper"
 	"github.com/zgwit/go-plc/protocol"
+	"strconv"
 	"strings"
 )
+
+type FxProgramCommand struct {
+	Code  uint16
+	IsBit bool
+	Base  int
+}
+
+type FxProgramAddress struct {
+	Code string
+	Addr uint16
+}
+
+func (a *FxProgramAddress) String() string {
+	return fmt.Sprintf("%s %d", a.Code, a.Addr)
+}
+
+func (a *FxProgramAddress) Diff(from protocol.Addr) (int, bool) {
+
+	return 0, false
+}
+
+var fxProgramCommands = map[string]FxProgramCommand{
+	"X":  {0x0080, true, 8},   //X输入继电器
+	"Y":  {0x00A0, true, 8},   //Y输出继电器
+	"M":  {0x0100, true, 10},  //M中间继电器
+	"D":  {0x1000, false, 10}, //D数据寄存器
+	"S":  {0x0000, true, 10},  //S步进继电器
+	"TS": {0x00C0, true, 10},  //定时器的触点
+	"TC": {0x02C0, true, 10},  //定时器的线圈
+	"TN": {0x0800, false, 10}, //定时器的当前值 ?
+	"CS": {0x01C0, true, 10},  //计数器的触点
+	"CC": {0x03C0, true, 10},  //计数器的线圈
+	"CN": {0x0A00, false, 10}, //计数器的当前值 ?
+}
+
+func ParseFxProgramAddress(code string, address string) (*FxProgramAddress, error) {
+	var addr FxProgramAddress
+
+	cmd, ok := fxProgramCommands[code]
+	if !ok {
+		return nil, fmt.Errorf("不支持的区域 %s", code)
+	}
+	addr.Code = code
+	v, err := strconv.ParseUint(address[2:], cmd.Base, 16)
+	if cmd.IsBit {
+		addr.Addr = cmd.Code + uint16(int(v)/8)
+	} else {
+		addr.Addr = cmd.Code + uint16(v)*2
+	}
+	return &addr, err
+}
 
 // FxProgram FX协议
 type FxProgram struct {
 	link protocol.Messenger
 }
 
-func (t *FxProgram) Write(station int, area string, addr string, data []byte) error {
-	a, err := ParseFxProgramAddress(area, addr)
-	if err != nil {
-		return err
-	}
-	return t.write(a, data)
-}
-
-func (t *FxProgram) Read(station int, area string, addr string, size int) ([]byte, error) {
-	a, err := ParseFxProgramAddress(area, addr)
-	if err != nil {
-		return nil, err
-	}
-	return t.read(a, size)
-}
-
-// NewFxSerial 新建
-func NewFxSerial() *FxProgram {
+// NewFxProgram 新建
+func NewFxProgram() *FxProgram {
 	return &FxProgram{}
 }
 
 // Read 解析
-func (t *FxProgram) read(addr *FxProgramAddress, length int) ([]byte, error) {
+func (t *FxProgram) Read(address protocol.Addr, length int) ([]byte, error) {
+	addr := address.(*FxProgramAddress)
+
 	buf := make([]byte, 11)
 	buf[0] = 0x02                                // STX
 	buf[1] = 0x30                                // 命令 Read
@@ -76,7 +114,8 @@ func (t *FxProgram) read(addr *FxProgramAddress, length int) ([]byte, error) {
 }
 
 // Write 写
-func (t *FxProgram) write(addr *FxProgramAddress, values []byte) error {
+func (t *FxProgram) Write(address protocol.Addr, values []byte) error {
+	addr := address.(*FxProgramAddress)
 
 	//先转成十六进制
 	length := len(values)

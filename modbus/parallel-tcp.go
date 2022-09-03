@@ -5,8 +5,7 @@ import (
 	"fmt"
 	"github.com/zgwit/go-plc/helper"
 	"github.com/zgwit/go-plc/protocol"
-
-	"strconv"
+	"io"
 	"sync"
 	"time"
 )
@@ -150,32 +149,24 @@ func (m *ParallelTCP) handlePack(buf []byte) {
 	}
 }
 
-func (m *ParallelTCP) Read(station int, area string, addr string, size int) ([]byte, error) {
-	code := parseCode(area)
-	offset, err := strconv.ParseUint(addr, 10, 16)
-	if err != nil {
-		return nil, err
-	}
+func (m *ParallelTCP) Read(address protocol.Addr, size int) ([]byte, error) {
+	addr := address.(*Address)
 
 	b := make([]byte, 12)
 	//helper.WriteUint16(b, id)
 	helper.WriteUint16(b[2:], 0) //协议版本
 	helper.WriteUint16(b[4:], 6) //剩余长度
-	b[6] = uint8(station)
-	b[7] = code
-	helper.WriteUint16(b[8:], uint16(offset))
+	b[6] = addr.Slave
+	b[7] = addr.Code
+	helper.WriteUint16(b[8:], addr.Offset)
 	helper.WriteUint16(b[10:], uint16(size))
 
 	return m.execute(b, true)
 }
 
-func (m *ParallelTCP) Write(station int, area string, addr string, buf []byte) error {
-
-	code := parseCode(area)
-	offset, err := strconv.ParseUint(addr, 10, 16)
-	if err != nil {
-		return err
-	}
+func (m *ParallelTCP) Write(address protocol.Addr, buf []byte) error {
+	addr := address.(*Address)
+	code := addr.Code
 
 	length := len(buf)
 	switch code {
@@ -218,11 +209,11 @@ func (m *ParallelTCP) Write(station int, area string, addr string, buf []byte) e
 	//helper.WriteUint16(b, id)
 	helper.WriteUint16(b[2:], 0) //协议版本
 	helper.WriteUint16(b[4:], 6) //剩余长度
-	b[6] = uint8(station)
+	b[6] = addr.Slave
 	b[7] = code
-	helper.WriteUint16(b[8:], uint16(offset))
+	helper.WriteUint16(b[8:], addr.Offset)
 	copy(b[10:], buf)
 
-	_, err = m.execute(b, true)
+	_, err := m.execute(b, true)
 	return err
 }

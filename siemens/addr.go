@@ -3,7 +3,6 @@ package siemens
 import (
 	"fmt"
 	"github.com/zgwit/go-plc/protocol"
-	"iot-master/model"
 	"regexp"
 	"strconv"
 	"strings"
@@ -42,39 +41,32 @@ func (a *Address) String() string {
 	return code + strconv.Itoa(int(a.Offset))
 }
 
-func (a *Address) Lookup(data []byte, from protocol.Addr, tp model.DataType, le bool, precision int) (interface{}, bool) {
+func (a *Address) Diff(from protocol.Addr) (int, bool) {
 	base := from.(*Address)
-	if base.Code != a.Code {
-		return nil, false
-	}
-	if base.DB != a.DB {
-		return nil, false
+	if base.Code != a.Code || base.DB != a.DB {
+		return 0, false
 	}
 	if base.HasBit {
 		if a.HasBit {
 			cursor := int(a.Offset-base.Offset)*8 + int(a.Bits) - int(base.Bits)
-			if cursor < 0 || cursor > len(data) {
-				return nil, false
+			if cursor < 0 {
+				return 0, false
 			}
-			return data[cursor] > 0, true
+			return cursor, true
 		} else {
-			return nil, false
+			return 0, false
 		}
 	} else {
 		cursor := int(a.Offset - base.Offset)
-		if cursor < 0 || cursor > len(data) {
-			return nil, false
+		if cursor < 0 {
+			return 0, false
 		}
 		if a.HasBit {
-			return data[cursor]&(0x01<<a.Bits) > 0, true
+			//return data[cursor]&(0x01<<a.Bits) > 0, true
+			return 0, false
 		} else {
-			val, err := tp.Decode(data[cursor:], le, precision)
-			if err != nil {
-				return nil, false
-			}
-			return val, true
+			return cursor, true
 		}
-
 	}
 }
 

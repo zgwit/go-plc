@@ -11,17 +11,19 @@ import (
 type Fins struct {
 	frame UdpFrame
 	link  protocol.Messenger
+	buf   []byte
 }
 
 func NewFinsTCP(link io.ReadWriter, opts string) protocol.Protocol {
-	fins := &Fins{link: protocol.Messenger{Conn: link}}
+	fins := &Fins{
+		link: protocol.Messenger{Conn: link},
+		buf:  make([]byte, 256)}
 	return fins
 }
 
 func (f *Fins) execute(cmd []byte) ([]byte, error) {
 	//发送请求
-	var buf [256]byte
-	l, err := f.link.Ask(cmd, buf[:])
+	l, err := f.link.Ask(cmd, f.buf)
 	if err != nil {
 		return nil, err
 	}
@@ -32,18 +34,18 @@ func (f *Fins) execute(cmd []byte) ([]byte, error) {
 	}
 
 	//头16字节：FINS + 长度 + 命令 + 错误码
-	status := helper.ParseUint32(buf[12:])
+	status := helper.ParseUint32(f.buf[12:])
 	if status != 0 {
 		return nil, fmt.Errorf("TCP状态错误: %d", status)
 	}
 
-	length := helper.ParseUint32(buf[4:])
+	length := helper.ParseUint32(f.buf[4:])
 	//判断剩余长度
 	if int(length)+8 < l {
 		return nil, fmt.Errorf("长度错误: %d", length)
 	}
 
-	return buf[16:l], nil
+	return f.buf[16:l], nil
 }
 
 func (f *Fins) Handshake() error {
@@ -70,7 +72,7 @@ func (f *Fins) Handshake() error {
 	return nil
 }
 
-func (f *Fins) Read(station int, area string, addr string, size int) ([]byte, error) {
+func (f *Fins) Read(address protocol.Addr, size int) ([]byte, error) {
 
 	//构建读命令
 	buf, e := buildReadCommand(address, size)
@@ -100,7 +102,7 @@ func (f *Fins) Read(station int, area string, addr string, size int) ([]byte, er
 	return recv[14:], nil
 }
 
-func (f *Fins) Write(station int, area string, addr string, values []byte) error {
+func (f *Fins) Write(address protocol.Addr, values []byte) error {
 	//构建写命令
 	buf, e := buildWriteCommand(address, values)
 	if e != nil {

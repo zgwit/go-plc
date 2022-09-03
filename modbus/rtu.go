@@ -5,20 +5,19 @@ import (
 	"fmt"
 	"github.com/zgwit/go-plc/helper"
 	"github.com/zgwit/go-plc/protocol"
-
-	"strconv"
+	"io"
 )
 
 // RTU Modbus-RTU协议
 type RTU struct {
-	link io.ReadWriter
+	link protocol.Messenger
 	buf  []byte
 }
 
 func NewRTU(link io.ReadWriter, opts string) protocol.Protocol {
 	//TODO parse opts(yaml)
 	rtu := &RTU{
-		link: link,
+		link: protocol.Messenger{Conn: link},
 		//slave: opts["slave"].(uint8),
 		buf: make([]byte, 256),
 	}
@@ -28,14 +27,9 @@ func NewRTU(link io.ReadWriter, opts string) protocol.Protocol {
 
 func (m *RTU) execute(cmd []byte) ([]byte, error) {
 
-	_, err := m.link.Write(cmd)
+	l, err := m.link.AskAtLeast(cmd, m.buf, 5)
 	if err != nil {
 		return nil, err
-	}
-
-	l, err := m.link.Read(m.buf)
-	if l < 5 {
-		return nil, errors.New("长度不足")
 	}
 
 	crc := helper.ParseUint16LittleEndian(m.buf[l-2:])
@@ -91,31 +85,23 @@ func (m *RTU) execute(cmd []byte) ([]byte, error) {
 	}
 }
 
-func (m *RTU) Read(station int, area string, addr string, size int) ([]byte, error) {
-	code := parseCode(area)
-	offset, err := strconv.ParseUint(addr, 10, 16)
-	if err != nil {
-		return nil, err
-	}
-
+func (m *RTU) Read(address protocol.Addr, size int) ([]byte, error) {
+	addr := address.(*Address)
 	b := make([]byte, 8)
-	b[0] = uint8(station)
-	b[1] = code
-	helper.WriteUint16(b[2:], uint16(offset))
+	b[0] = addr.Slave
+	b[1] = addr.Code
+	helper.WriteUint16(b[2:], addr.Offset)
 	helper.WriteUint16(b[4:], uint16(size))
 	helper.WriteUint16LittleEndian(b[6:], CRC16(b[:6]))
 
 	return m.execute(b)
 }
 
-func (m *RTU) Write(station int, area string, addr string, buf []byte) error {
-	code := parseCode(area)
-	offset, err := strconv.ParseUint(addr, 10, 16)
-	if err != nil {
-		return err
-	}
-
+func (m *RTU) Write(address protocol.Addr, buf []byte) error {
+	addr := address.(*Address)
 	length := len(buf)
+	//如果是线圈，需要Shrink
+	code := addr.Code
 	switch code {
 	case FuncCodeReadCoils:
 		if length == 1 {
@@ -153,12 +139,12 @@ func (m *RTU) Write(station int, area string, addr string, buf []byte) error {
 
 	l := 6 + len(buf)
 	b := make([]byte, l)
-	b[0] = uint8(station)
+	b[0] = addr.Slave
 	b[1] = code
-	helper.WriteUint16(b[2:], uint16(offset))
+	helper.WriteUint16(b[2:], addr.Offset)
 	copy(b[4:], buf)
 	helper.WriteUint16LittleEndian(b[l-2:], CRC16(b[:l-2]))
 
-	_, err = m.execute(b)
+	_, err := m.execute(b)
 	return err
 }

@@ -3,36 +3,23 @@ package siemens
 import (
 	"fmt"
 	"github.com/zgwit/go-plc/protocol"
-	"io"
-	"time"
 )
 
 type S7 struct {
 	handshake1 []byte
 	handshake2 []byte
 
-	link io.ReadWriter
-	desc *protocol.Desc
-}
-
-func (s *S7) Init() {
-	s.link.On("online", func() {
-		_ = s.HandShake()
-	})
-	return
-}
-
-func (s *S7) Desc() *protocol.Desc {
-	return &DescS7_200_Smart
+	link protocol.Messenger
+	buf  []byte
 }
 
 func (s *S7) HandShake() error {
-	_, err := s.link.Ask(s.handshake1, 5)
+	_, err := s.link.Ask(s.handshake1, s.buf)
 	if err != nil {
 		return err
 	}
 	//TODO 检查结果
-	_, err = s.link.Ask(s.handshake2, 5)
+	_, err = s.link.Ask(s.handshake2, s.buf)
 	if err != nil {
 		return err
 	}
@@ -40,7 +27,7 @@ func (s *S7) HandShake() error {
 	return nil
 }
 
-func (s *S7) Read(station int, addr protocol.Addr, size int) ([]byte, error) {
+func (s *S7) Read(addr protocol.Addr, size int) ([]byte, error) {
 	address := addr.(*Address)
 
 	var vt uint8 = VariableTypeWord
@@ -70,14 +57,14 @@ func (s *S7) Read(station int, addr protocol.Addr, size int) ([]byte, error) {
 
 	cmd := pack.encode()
 
-	buf, err := s.link.Ask(cmd, 5*time.Second)
+	n, err := s.link.Ask(cmd, s.buf)
 	if err != nil {
 		return nil, err
 	}
 
 	//解析数据
 	var resp S7Package
-	err = resp.decode(buf)
+	err = resp.decode(s.buf[:n])
 	if err != nil {
 		return nil, err
 	}
@@ -85,12 +72,7 @@ func (s *S7) Read(station int, addr protocol.Addr, size int) ([]byte, error) {
 	return resp.data[0].Data, nil
 }
 
-func (s *S7) Poll(station int, addr protocol.Addr, size int) ([]byte, error) {
-	//TODO 使用Reference
-	return s.Read(station, addr, size)
-}
-
-func (s *S7) Write(station int, addr protocol.Addr, data []byte) error {
+func (s *S7) Write(addr protocol.Addr, data []byte) error {
 	address := addr.(*Address)
 	length := len(data)
 
@@ -126,14 +108,14 @@ func (s *S7) Write(station int, addr protocol.Addr, data []byte) error {
 
 	cmd := pack.encode()
 
-	buf, err := s.link.Ask(cmd, 5*time.Second)
+	n, err := s.link.Ask(cmd, s.buf)
 	if err != nil {
 		return err
 	}
 
 	//解析结果
 	var resp S7Package
-	err = resp.decode(buf)
+	err = resp.decode(s.buf[:n])
 	if err != nil {
 		return err
 	}
