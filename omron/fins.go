@@ -72,7 +72,7 @@ func (f *Fins) Handshake() error {
 	return nil
 }
 
-func (f *Fins) Read(address protocol.Addr, size int) ([]byte, error) {
+func (f *Fins) Read(station int, address protocol.Addr, size int) ([]byte, error) {
 
 	//构建读命令
 	buf, e := buildReadCommand(address, size)
@@ -102,7 +102,7 @@ func (f *Fins) Read(address protocol.Addr, size int) ([]byte, error) {
 	return recv[14:], nil
 }
 
-func (f *Fins) Write(address protocol.Addr, values []byte) error {
+func (f *Fins) Write(station int, address protocol.Addr, values []byte) error {
 	//构建写命令
 	buf, e := buildWriteCommand(address, values)
 	if e != nil {

@@ -27,14 +27,14 @@ func (s *S7) HandShake() error {
 	return nil
 }
 
-func (s *S7) Read(addr protocol.Addr, size int) ([]byte, error) {
-	address := addr.(*Address)
+func (s *S7) Read(station int, address protocol.Addr, size int) ([]byte, error) {
+	addr := address.(*Address)
 
 	var vt uint8 = VariableTypeWord
-	offset := address.Offset
-	if address.HasBit {
+	offset := addr.Offset
+	if addr.HasBit {
 		vt = VariableTypeBit
-		offset = offset*8 + uint32(address.Bits)
+		offset = offset*8 + uint32(addr.Bits)
 	}
 
 	pack := S7Package{
@@ -46,8 +46,8 @@ func (s *S7) Read(addr protocol.Addr, size int) ([]byte, error) {
 			Type:  vt,
 			Areas: []S7ParameterArea{
 				{
-					Code:   address.Code,
-					DB:     address.DB,
+					Code:   addr.Code,
+					DB:     addr.DB,
 					Size:   uint16(size),
 					Offset: offset,
 				},
@@ -72,15 +72,15 @@ func (s *S7) Read(addr protocol.Addr, size int) ([]byte, error) {
 	return resp.data[0].Data, nil
 }
 
-func (s *S7) Write(addr protocol.Addr, data []byte) error {
-	address := addr.(*Address)
+func (s *S7) Write(station int, address protocol.Addr, data []byte) error {
+	addr := address.(*Address)
 	length := len(data)
 
 	var vt uint8 = VariableTypeWord
-	offset := address.Offset
-	if address.HasBit {
+	offset := addr.Offset
+	if addr.HasBit {
 		vt = VariableTypeBit
-		offset = offset*8 + uint32(address.Bits)
+		offset = offset*8 + uint32(addr.Bits)
 	}
 
 	pack := S7Package{
@@ -92,8 +92,8 @@ func (s *S7) Write(addr protocol.Addr, data []byte) error {
 			Type:  vt,
 			Areas: []S7ParameterArea{
 				{
-					Code:   address.Code,
-					DB:     address.DB,
+					Code:   addr.Code,
+					DB:     addr.DB,
 					Size:   uint16(length),
 					Offset: offset,
 				},
@@ -128,7 +128,7 @@ func (s *S7) Write(addr protocol.Addr, data []byte) error {
 		0x00	Reserved	未定义，预留
 		0x01	Hardware error	硬件错误
 		0x03	Accessing the object not allowed	对象不允许访问
-		0x05	Invalid address	无效地址，所需的地址超出此PLC的极限
+		0x05	Invalid addr	无效地址，所需的地址超出此PLC的极限
 		0x06	Data type not supported	数据类型不支持
 		0x07	Data type inconsistent	日期类型不一致
 		0x0a	Object does not exist	对象不存在

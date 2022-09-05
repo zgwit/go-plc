@@ -72,7 +72,7 @@ func NewFxProgram() *FxProgram {
 }
 
 // Read 解析
-func (t *FxProgram) Read(address protocol.Addr, length int) ([]byte, error) {
+func (t *FxProgram) Read(station int, address protocol.Addr, length int) ([]byte, error) {
 	addr := address.(*FxProgramAddress)
 
 	buf := make([]byte, 11)
@@ -114,7 +114,7 @@ func (t *FxProgram) Read(address protocol.Addr, length int) ([]byte, error) {
 }
 
 // Write 写
-func (t *FxProgram) Write(address protocol.Addr, values []byte) error {
+func (t *FxProgram) Write(station int, address protocol.Addr, values []byte) error {
 	addr := address.(*FxProgramAddress)
 
 	//先转成十六进制

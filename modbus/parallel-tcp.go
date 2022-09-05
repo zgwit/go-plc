@@ -149,7 +149,7 @@ func (m *ParallelTCP) handlePack(buf []byte) {
 	}
 }
 
-func (m *ParallelTCP) Read(address protocol.Addr, size int) ([]byte, error) {
+func (m *ParallelTCP) Read(station int, address protocol.Addr, size int) ([]byte, error) {
 	addr := address.(*Address)
 
 	b := make([]byte, 12)
@@ -164,7 +164,7 @@ func (m *ParallelTCP) Read(address protocol.Addr, size int) ([]byte, error) {
 	return m.execute(b, true)
 }
 
-func (m *ParallelTCP) Write(address protocol.Addr, buf []byte) error {
+func (m *ParallelTCP) Write(station int, address protocol.Addr, buf []byte) error {
 	addr := address.(*Address)
 	code := addr.Code
 

@@ -6,7 +6,7 @@ import (
 )
 
 type Address struct {
-	Slave  uint8  `json:"slave"`
+	//Slave  uint8  `json:"slave"`
 	Code   uint8  `json:"code"`
 	Offset uint16 `json:"offset"`
 }

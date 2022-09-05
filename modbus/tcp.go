@@ -67,13 +67,13 @@ func (m *TCP) execute(cmd []byte) ([]byte, error) {
 	}
 }
 
-func (m *TCP) Read(address protocol.Addr, size int) ([]byte, error) {
+func (m *TCP) Read(station int, address protocol.Addr, size int) ([]byte, error) {
 	addr := address.(*Address)
 	b := make([]byte, 12)
 	//helper.WriteUint16(b, id)
 	helper.WriteUint16(b[2:], 0) //协议版本
 	helper.WriteUint16(b[4:], 6) //剩余长度
-	b[6] = addr.Slave
+	b[6] = uint8(station)
 	b[7] = addr.Code
 	helper.WriteUint16(b[8:], addr.Offset)
 	helper.WriteUint16(b[10:], uint16(size))
@@ -81,7 +81,7 @@ func (m *TCP) Read(address protocol.Addr, size int) ([]byte, error) {
 	return m.execute(b)
 }
 
-func (m *TCP) Write(address protocol.Addr, buf []byte) error {
+func (m *TCP) Write(station int, address protocol.Addr, buf []byte) error {
 	addr := address.(*Address)
 	length := len(buf)
 	//如果是线圈，需要Shrink
@@ -126,7 +126,7 @@ func (m *TCP) Write(address protocol.Addr, buf []byte) error {
 	//helper.WriteUint16(b, id)
 	helper.WriteUint16(b[2:], 0) //协议版本
 	helper.WriteUint16(b[4:], 6) //剩余长度
-	b[6] = addr.Slave
+	b[6] = uint8(station)
 	b[7] = code
 	helper.WriteUint16(b[8:], addr.Offset)
 	copy(b[10:], buf)

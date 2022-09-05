@@ -13,6 +13,7 @@ type Manifest struct {
 	Label    string          `json:"label"`
 	Version  string          `json:"version"`
 	Areas    []Area          `json:"areas"`
+	Station  bool            `json:"station"`
 	Resolver AddressResolver `json:"-"`
 	Factory  CreateFactory   `json:"-"`
 }

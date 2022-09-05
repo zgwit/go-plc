@@ -44,7 +44,7 @@ func (f *FinsHostLink) execute(cmd []byte) ([]byte, error) {
 	return recv, nil
 }
 
-func (f *FinsHostLink) Read(address protocol.Addr, size int) ([]byte, error) {
+func (f *FinsHostLink) Read(station int, address protocol.Addr, size int) ([]byte, error) {
 
 	//构建读命令
 	buf, e := buildReadCommand(address, size)
@@ -70,7 +70,7 @@ func (f *FinsHostLink) Read(address protocol.Addr, size int) ([]byte, error) {
 	return recv[4:], nil
 }
 
-func (f *FinsHostLink) Write(address protocol.Addr, values []byte) error {
+func (f *FinsHostLink) Write(station int, address protocol.Addr, values []byte) error {
 	//构建写命令
 	buf, e := buildWriteCommand(address, values)
 	if e != nil {

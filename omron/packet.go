@@ -5,7 +5,7 @@ import (
 	"github.com/zgwit/go-plc/protocol"
 )
 
-func buildReadCommand(address protocol.Addr, length int) ([]byte, error) {
+func buildReadCommand(station int, address protocol.Addr, length int) ([]byte, error) {
 	//解析地址
 	addr := address.(*Address)
 
@@ -25,7 +25,7 @@ func buildReadCommand(address protocol.Addr, length int) ([]byte, error) {
 	return buf, nil
 }
 
-func buildWriteCommand(address protocol.Addr, values []byte) ([]byte, error) {
+func buildWriteCommand(station int, address protocol.Addr, values []byte) ([]byte, error) {
 	//解析地址
 	addr := address.(*Address)
 

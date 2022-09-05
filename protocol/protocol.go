@@ -11,10 +11,10 @@ type CreateFactory func(conn io.ReadWriter, opts string) Protocol
 type Protocol interface {
 
 	//Read 读数据
-	Read(add Addr, size int) ([]byte, error)
+	Read(station int, add Addr, size int) ([]byte, error)
 
 	//Write 写数据
-	Write(add Addr, data []byte) error
+	Write(station int, add Addr, data []byte) error
 
 	//Attach(Conn io.ReadWriter) error
 }

@@ -85,10 +85,10 @@ func (m *RTU) execute(cmd []byte) ([]byte, error) {
 	}
 }
 
-func (m *RTU) Read(address protocol.Addr, size int) ([]byte, error) {
+func (m *RTU) Read(station int, address protocol.Addr, size int) ([]byte, error) {
 	addr := address.(*Address)
 	b := make([]byte, 8)
-	b[0] = addr.Slave
+	b[0] = uint8(station)
 	b[1] = addr.Code
 	helper.WriteUint16(b[2:], addr.Offset)
 	helper.WriteUint16(b[4:], uint16(size))
@@ -97,7 +97,7 @@ func (m *RTU) Read(address protocol.Addr, size int) ([]byte, error) {
 	return m.execute(b)
 }
 
-func (m *RTU) Write(address protocol.Addr, buf []byte) error {
+func (m *RTU) Write(station int, address protocol.Addr, buf []byte) error {
 	addr := address.(*Address)
 	length := len(buf)
 	//如果是线圈，需要Shrink
@@ -139,7 +139,7 @@ func (m *RTU) Write(address protocol.Addr, buf []byte) error {
 
 	l := 6 + len(buf)
 	b := make([]byte, l)
-	b[0] = addr.Slave
+	b[0] = uint8(station)
 	b[1] = code
 	helper.WriteUint16(b[2:], addr.Offset)
 	copy(b[4:], buf)
