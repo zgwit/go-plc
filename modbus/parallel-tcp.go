@@ -156,7 +156,7 @@ func (m *ParallelTCP) Read(station int, address protocol.Addr, size int) ([]byte
 	//helper.WriteUint16(b, id)
 	helper.WriteUint16(b[2:], 0) //协议版本
 	helper.WriteUint16(b[4:], 6) //剩余长度
-	b[6] = addr.Slave
+	b[6] = byte(station)
 	b[7] = addr.Code
 	helper.WriteUint16(b[8:], addr.Offset)
 	helper.WriteUint16(b[10:], uint16(size))
@@ -209,7 +209,7 @@ func (m *ParallelTCP) Write(station int, address protocol.Addr, buf []byte) erro
 	//helper.WriteUint16(b, id)
 	helper.WriteUint16(b[2:], 0) //协议版本
 	helper.WriteUint16(b[4:], 6) //剩余长度
-	b[6] = addr.Slave
+	b[6] = byte(station)
 	b[7] = code
 	helper.WriteUint16(b[8:], addr.Offset)
 	copy(b[10:], buf)
