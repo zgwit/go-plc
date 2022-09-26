@@ -18,7 +18,7 @@ Join us pls if you want.
 # make sure you have go1.17 or higher
 
 # install library
-go get -u github.com/zgwit/go-pic
+go get -u github.com/zgwit/go-plc
 
 ```
 
